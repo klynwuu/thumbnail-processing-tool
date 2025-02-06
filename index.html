@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Media Image Generator</title>
+    <link rel="icon" type="image/png" href="img/favicon.png">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=file_save" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cabin+Condensed:wght@400;500;600;700&family=Chakra+Petch:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=DotGothic16&family=Doto:wght@100..900&family=Major+Mono+Display&family=Nabla&family=Notable&family=Noto+Sans+TC:wght@100..900&family=Noto+Serif+HK:wght@200..900&family=Nova+Mono&family=Permanent+Marker&family=Pixelify+Sans:wght@400..700&family=Rubik+Broken+Fax&family=Shadows+Into+Light&family=Turret+Road:wght@200;300;400;500;700;800&family=Ultra&family=Work+Sans:ital,wght@0,100..900;1,100..900&family=Zilla+Slab+Highlight:wght@400;700&display=swap" rel="stylesheet">
+
+    <script type="importmap">
+        {
+            "imports": {
+                "@material/web/": "https://esm.run/@material/web/"
+            }
+        }
+    </script>
+    <script type="module">
+        import '@material/web/all.js';
+        import {styles as typescaleStyles} from '@material/web/typography/md-typescale-styles.js';
+        document.adoptedStyleSheets.push(typescaleStyles.styleSheet);
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/exif-heic-js/exif-heic-js/exif-heic.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.6.0/color-thief.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1 class="md-headline-large">Social Media Image Generator</h1>
+        
+        <div id="upload-area" class="upload-area">
+            <span class="material-icons" style="font-size: 48px; color: var(--md-sys-color-outline); margin-bottom: 16px;">
+                upload_file
+            </span>
+            <p class="md-body-large">Drag and drop images here</p>
+            <p class="md-body-medium">or</p>
+            <input type="file" id="file-input" class="file-input" accept="image/*" multiple>
+            <md-filled-button onclick="document.getElementById('file-input').click()">
+                <span class="material-icons">add_photo_alternate</span>
+                Choose Files
+            </md-filled-button>
+            <p class="md-body-small supported-formats">
+                <span class="material-icons-outlined" style="font-size: 16px; vertical-align: middle;">info</span>
+                Supported formats: PNG, JPG, JPEG, WEBP, HEIC
+            </p>
+        </div>
+
+        <div id="preview-area" class="preview-area">
+            <!-- Preview images will be inserted here -->
+        </div>
+
+        <div id="canvas-controls" class="canvas-controls" >
+            <h2 class="md-headline-small">Canvas Settings</h2>
+            <div class="settings-column" style="overflow-y: auto; max-height: 80vh;">
+                <div class="settings-group">
+                    <h3 class="md-title-medium">Orientation</h3>
+                    <div class="orientation-toggle">
+                        <md-filled-tonal-button class="orientation-btn active" data-orientation="landscape">
+                            <span class="material-icons">stay_current_landscape</span>
+                            Landscape
+                        </md-filled-tonal-button>
+                        <md-filled-tonal-button class="orientation-btn" data-orientation="portrait">
+                            <span class="material-icons">stay_current_portrait</span>
+                            Portrait
+                        </md-filled-tonal-button>
+                    </div>
+                </div>
+
+                <div class="settings-group">
+                    <h3 class="md-title-medium">Aspect Ratio</h3>
+                    <div class="aspect-ratios">
+                        <md-filled-tonal-button class="aspect-btn active" data-ratio="1:1">Square (1:1)</md-filled-tonal-button>
+                        <md-filled-tonal-button class="aspect-btn" data-ratio="16:9">16:9</md-filled-tonal-button>
+                        <md-filled-tonal-button class="aspect-btn" data-ratio="4:3">4:3</md-filled-tonal-button>
+                        <md-filled-tonal-button class="aspect-btn" data-ratio="2.35:1">2.35:1</md-filled-tonal-button>
+                    </div>
+                </div>
+
+                <div class="settings-group">
+                    <h3 class="md-title-medium">Canvas Color</h3>
+                    <div class="canvas-color">
+                        <div class="color-input-group">
+                            <div class="color-preview" id="color-preview"></div>
+                            <md-filled-text-field
+                                id="color-input"
+                                type="text"
+                                value="#FFFFFF"
+                                placeholder="Enter hex color">
+                            </md-filled-text-field>
+                            <md-filled-tonal-button id="eyedropper-btn">
+                                <span class="material-icons">colorize</span>
+                                Pick Color
+                            </md-filled-tonal-button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-group">
+                    <h3 class="md-title-medium">Text Overlay</h3>
+                    <div class="text-input-group">
+                        <div class="input-field">
+                            <label for="title-input" class="md-label-large">Title</label>
+                            <md-filled-text-field
+                                id="title-input"
+                                type="textarea"
+                                rows="3"
+                                style="flex: 1;"
+                                placeholder="Enter title text">
+                            </md-filled-text-field>
+                        </div>
+                        <div class="input-field">
+                            <label for="subtitle-input" class="md-label-large">Subtitle</label>
+                            <md-filled-text-field
+                                id="subtitle-input"
+                                type="textarea"
+                                rows="3"
+                                style="flex: 1;"
+                                placeholder="Enter subtitle text">
+                            </md-filled-text-field>
+                        </div>
+                    </div>
+
+                    <div class="font-controls">
+                        <div class="font-group">
+                            <md-filled-select id="title-font-family-select" label="Title Font">
+                                <md-select-option value="Cabin Condensed">
+                                    <div slot="headline" style="font-family: 'Cabin Condensed';">Cabin Condensed</div>
+                                </md-select-option>
+                                <md-select-option value="Work Sans">
+                                    <div slot="headline" style="font-family: 'Work Sans';">Work Sans</div>
+                                </md-select-option>
+                                <md-select-option value="Chakra Petch">
+                                    <div slot="headline" style="font-family: 'Chakra Petch';">Chakra Petch</div>
+                                </md-select-option>
+                                <md-select-option value="DotGothic16">
+                                    <div slot="headline" style="font-family: 'DotGothic16';">DotGothic16</div>
+                                </md-select-option>
+                                <md-select-option value="Doto">
+                                    <div slot="headline" style="font-family: 'Doto';">Doto</div>
+                                </md-select-option>
+                                <md-select-option value="Major Mono Display">
+                                    <div slot="headline" style="font-family: 'Major Mono Display';">Major Mono Display</div>
+                                </md-select-option>
+                                <md-select-option value="Nabla">
+                                    <div slot="headline" style="font-family: 'Nabla';">Nabla</div>
+                                </md-select-option>
+                                <md-select-option value="Notable">
+                                    <div slot="headline" style="font-family: 'Notable';">Notable</div>
+                                </md-select-option>
+                                <md-select-option value="Noto Sans TC">
+                                    <div slot="headline" style="font-family: 'Noto Sans TC';">Noto Sans TC</div>
+                                </md-select-option>
+                                <md-select-option value="Noto Serif HK">
+                                    <div slot="headline" style="font-family: 'Noto Serif HK';">Noto Serif HK</div>
+                                </md-select-option>
+                                <md-select-option value="Nova Mono">
+                                    <div slot="headline" style="font-family: 'Nova Mono';">Nova Mono</div>
+                                </md-select-option>
+                                <md-select-option value="Permanent Marker">
+                                    <div slot="headline" style="font-family: 'Permanent Marker';">Permanent Marker</div>
+                                </md-select-option>
+                                <md-select-option value="Pixelify Sans">
+                                    <div slot="headline" style="font-family: 'Pixelify Sans';">Pixelify Sans</div>
+                                </md-select-option>
+                                <md-select-option value="Rubik Broken Fax">
+                                    <div slot="headline" style="font-family: 'Rubik Broken Fax';">Rubik Broken Fax</div>
+                                </md-select-option>
+                                <md-select-option value="Shadows Into Light">
+                                    <div slot="headline" style="font-family: 'Shadows Into Light';">Shadows Into Light</div>
+                                </md-select-option>
+                                <md-select-option value="Turret Road">
+                                    <div slot="headline" style="font-family: 'Turret Road';">Turret Road</div>
+                                </md-select-option>
+                                <md-select-option value="Ultra">
+                                    <div slot="headline" style="font-family: 'Ultra';">Ultra</div>
+                                </md-select-option>
+                                <md-select-option value="Zilla Slab Highlight">
+                                    <div slot="headline" style="font-family: 'Zilla Slab Highlight';">Zilla Slab Highlight</div>
+                                </md-select-option>
+                            </md-filled-select>
+
+                            <md-filled-select id="subtitle-font-family-select" label="Subtitle Font">
+                                <md-select-option value="Cabin Condensed">
+                                    <div slot="headline" style="font-family: 'Cabin Condensed';">Cabin Condensed</div>
+                                </md-select-option>
+                                <md-select-option value="Chakra Petch">
+                                    <div slot="headline" style="font-family: 'Chakra Petch';">Chakra Petch</div>
+                                </md-select-option>
+                                <md-select-option value="DotGothic16">
+                                    <div slot="headline" style="font-family: 'DotGothic16';">DotGothic16</div>
+                                </md-select-option>
+                                <md-select-option value="Doto">
+                                    <div slot="headline" style="font-family: 'Doto';">Doto</div>
+                                </md-select-option>
+                                <md-select-option value="Major Mono Display">
+                                    <div slot="headline" style="font-family: 'Major Mono Display';">Major Mono Display</div>
+                                </md-select-option>
+                                <md-select-option value="Nabla">
+                                    <div slot="headline" style="font-family: 'Nabla';">Nabla</div>
+                                </md-select-option>
+                                <md-select-option value="Notable">
+                                    <div slot="headline" style="font-family: 'Notable';">Notable</div>
+                                </md-select-option>
+                                <md-select-option value="Noto Sans TC">
+                                    <div slot="headline" style="font-family: 'Noto Sans TC';">Noto Sans TC</div>
+                                </md-select-option>
+                                <md-select-option value="Noto Serif HK">
+                                    <div slot="headline" style="font-family: 'Noto Serif HK';">Noto Serif HK</div>
+                                </md-select-option>
+                                <md-select-option value="Nova Mono">
+                                    <div slot="headline" style="font-family: 'Nova Mono';">Nova Mono</div>
+                                </md-select-option>
+                                <md-select-option value="Permanent Marker">
+                                    <div slot="headline" style="font-family: 'Permanent Marker';">Permanent Marker</div>
+                                </md-select-option>
+                                <md-select-option value="Pixelify Sans">
+                                    <div slot="headline" style="font-family: 'Pixelify Sans';">Pixelify Sans</div>
+                                </md-select-option>
+                                <md-select-option value="Rubik Broken Fax">
+                                    <div slot="headline" style="font-family: 'Rubik Broken Fax';">Rubik Broken Fax</div>
+                                </md-select-option>
+                                <md-select-option value="Shadows Into Light">
+                                    <div slot="headline" style="font-family: 'Shadows Into Light';">Shadows Into Light</div>
+                                </md-select-option>
+                                <md-select-option value="Turret Road">
+                                    <div slot="headline" style="font-family: 'Turret Road';">Turret Road</div>
+                                </md-select-option>
+                                <md-select-option value="Ultra">
+                                    <div slot="headline" style="font-family: 'Ultra';">Ultra</div>
+                                </md-select-option>
+                                <md-select-option value="Work Sans">
+                                    <div slot="headline" style="font-family: 'Work Sans';">Work Sans</div>
+                                </md-select-option>
+                                <md-select-option value="Zilla Slab Highlight">
+                                    <div slot="headline" style="font-family: 'Zilla Slab Highlight';">Zilla Slab Highlight</div>
+                                </md-select-option>
+                            </md-filled-select>
+                        </div>
+
+                        <div class="font-weight-group">
+                            <md-filled-select id="title-font-weight-select" label="Title Weight">
+                                <md-select-option value="200">
+                                    <div slot="headline">Extra Light</div>
+                                </md-select-option>
+                                <md-select-option value="300">
+                                    <div slot="headline">Light</div>
+                                </md-select-option>
+                                <md-select-option value="400">
+                                    <div slot="headline">Regular</div>
+                                </md-select-option>
+                                <md-select-option value="500">
+                                    <div slot="headline">Medium</div>
+                                </md-select-option>
+                                <md-select-option value="600">
+                                    <div slot="headline">Semi Bold</div>
+                                </md-select-option>
+                                <md-select-option value="700">
+                                    <div slot="headline">Bold</div>
+                                </md-select-option>
+                            </md-filled-select>
+
+                            <md-filled-select id="subtitle-font-weight-select" label="Subtitle Weight">
+                                <md-select-option value="200">
+                                    <div slot="headline">Extra Light</div>
+                                </md-select-option>
+                                <md-select-option value="300">
+                                    <div slot="headline">Light</div>
+                                </md-select-option>
+                                <md-select-option value="400">
+                                    <div slot="headline">Regular</div>
+                                </md-select-option>
+                                <md-select-option value="500">
+                                    <div slot="headline">Medium</div>
+                                </md-select-option>
+                                <md-select-option value="600">
+                                    <div slot="headline">Semi Bold</div>
+                                </md-select-option>
+                                <md-select-option value="700">
+                                    <div slot="headline">Bold</div>
+                                </md-select-option>
+                            </md-filled-select>
+                        </div>
+
+                        <div class="font-style-group">
+                            <md-filled-select id="title-font-style-select" label="Title Style">
+                                <md-select-option value="normal">
+                                    <div slot="headline">Normal</div>
+                                </md-select-option>
+                                <md-select-option value="italic">
+                                    <div slot="headline">Italic</div>
+                                </md-select-option>
+                            </md-filled-select>
+
+                            <md-filled-select id="subtitle-font-style-select" label="Subtitle Style">
+                                <md-select-option value="normal">
+                                    <div slot="headline">Normal</div>
+                                </md-select-option>
+                                <md-select-option value="italic">
+                                    <div slot="headline">Italic</div>
+                                </md-select-option>
+                            </md-filled-select>
+                        </div>
+
+                        <div class="text-style-controls">
+                            <div class="text-color-group">
+                                <div class="text-color-preview" id="text-color-preview"></div>
+                                <md-filled-text-field
+                                    id="text-color-input"
+                                    type="text"
+                                    value="#FFFFFF"
+                                    label="Text Color">
+                                </md-filled-text-field>
+                                <md-filled-tonal-button id="text-eyedropper-btn">
+                                    <span class="material-icons">colorize</span>
+                                </md-filled-tonal-button>
+                            </div>
+
+                            <div class="text-outline-color-group">
+                                <div class="text-outline-color-preview" id="text-border-color-preview"></div>
+                                <md-filled-text-field
+                                    id="text-border-color-input"
+                                    type="text"
+                                    value="#000000"
+                                    label="Outline Color">
+                                </md-filled-text-field>
+                                <md-filled-tonal-button id="text-border-eyedropper-btn">
+                                    <span class="material-icons">colorize</span>
+                                </md-filled-tonal-button>
+                            </div>
+
+                            <div class="text-effects-group">
+                                <md-filter-chip
+                                    id="text-shadow-effect"
+                                    label="Drop Shadow"
+                                    selected>
+                                    <span slot="icon" class="material-icons">filter_none</span>
+                                </md-filter-chip>
+                                <!-- <md-filter-chip
+                                    id="text-marker-effect"
+                                    label="Marker Effect">
+                                    <span slot="icon" class="material-icons">border_color</span>
+                                </md-filter-chip> -->
+                            </div>
+
+                            <div class="slider-group">
+                                <label class="md-label-large">Text Opacity</label>
+                                <md-slider
+                                    id="text-opacity-slider"
+                                    min="0"
+                                    max="100"
+                                    value="100"
+                                    step="1"
+                                    labeled>
+                                </md-slider>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-position-controls">
+                        <div class="slider-group">
+                            <label class="md-label-large">Font Size</label>
+                            <md-slider
+                                id="font-size-slider"
+                                min="12"
+                                max="120"
+                                value="32"
+                                step="1"
+                                labeled>
+                            </md-slider>
+                        </div>
+
+                        <div class="slider-group">
+                            <label class="md-label-large">Line Height</label>
+                            <md-slider
+                                id="line-height-slider"
+                                min="100"
+                                max="200"
+                                value="150"
+                                step="5"
+                                labeled>
+                            </md-slider>
+                        </div>
+
+                        <div class="slider-group">
+                            <label class="md-label-large">X Position</label>
+                            <md-slider
+                                id="text-x-position-slider"
+                                min="0"
+                                max="100"
+                                value="50"
+                                step="1"
+                                labeled>
+                            </md-slider>
+                        </div>
+
+                        <div class="slider-group">
+                            <label class="md-label-large">Y Position</label>
+                            <md-slider
+                                id="text-y-position-slider"
+                                min="0"
+                                max="100"
+                                value="50"
+                                step="1"
+                                labeled>
+                            </md-slider>
+                        </div>
+                    </div>
+
+                    <div class="snap-positions">
+                        <md-filled-tonal-button class="snap-position-btn" data-position="top">
+                            <span class="material-icons">vertical_align_top</span>
+                            Top
+                        </md-filled-tonal-button>
+                        <md-filled-tonal-button class="snap-position-btn" data-position="upper-third">
+                            <span class="material-icons">view_stream</span>
+                            Upper Third
+                        </md-filled-tonal-button>
+                        <md-filled-tonal-button class="snap-position-btn" data-position="center">
+                            <span class="material-icons">center_focus_strong</span>
+                            Center
+                        </md-filled-tonal-button>
+                        <md-filled-tonal-button class="snap-position-btn" data-position="lower-third">
+                            <span class="material-icons">view_stream</span>
+                            Lower Third
+                        </md-filled-tonal-button>
+                        <md-filled-tonal-button class="snap-position-btn" data-position="bottom">
+                            <span class="material-icons">vertical_align_bottom</span>
+                            Bottom
+                        </md-filled-tonal-button>
+                    </div>
+
+                    <div class="download-section" style="margin-top: 24px;">
+                        <md-filled-button id="download-btn" style="width: 100%;" disabled>
+                            <span class="material-icons">download</span>
+                            Download
+                        </md-filled-button>
+                    </div>
+                </div>
+            </div>
+            <div class="settings-grid-preview">
+                <div class="preview-column">
+                    <div class="canvas-preview" id="canvas-preview">
+                        <!-- Preview of the canvas with selected image will be shown here -->
+                    </div>
+                    <div class="image-controls">
+                        <div class="slider-group">
+                            <label class="md-label-large">Image Size</label>
+                            <div class="slider-container">
+                                <md-slider
+                                    id="size-slider"
+                                    min="0"
+                                    max="500"
+                                    value="80"
+                                    step="1"
+                                    labeled>
+                                </md-slider>
+                                <span class="slider-value" id="size-value">80%</span>
+                            </div>
+                        </div>
+                        <div class="slider-group">
+                            <label class="md-label-large">Horizontal Position</label>
+                            <div class="slider-container">
+                                <md-slider
+                                    id="x-position-slider"
+                                    min="-100"
+                                    max="100"
+                                    value="0"
+                                    step="1"
+                                    labeled>
+                                </md-slider>
+                                <span class="slider-value" id="x-position-value">Center</span>
+                            </div>
+                        </div>
+                        <div class="slider-group">
+                            <label class="md-label-large">Vertical Position</label>
+                            <div class="slider-container">
+                                <md-slider
+                                    id="y-position-slider"
+                                    min="-100"
+                                    max="100"
+                                    value="0"
+                                    step="1"
+                                    labeled>
+                                </md-slider>
+                                <span class="slider-value" id="y-position-value">Center</span>
+                            </div>
+                        </div>
+
+                        <div class="style-options">
+                            <label class="md-label-large">Image Effects</label>
+                            <div class="chip-set">
+                                <md-filter-chip 
+                                    id="shadow-effect" 
+                                    label="Drop Shadow"
+                                    selected>
+                                    <span slot="icon" class="material-icons">filter_none</span>
+                                </md-filter-chip>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="apply-button-container">
+                        <md-filled-button id="apply-image-btn" disabled>
+                            <span class="material-icons">add_to_photos</span>
+                            Apply Selected Image
+                        </md-filled-button>
+                        <div id="apply-help-text" class="help-text md-body-small">
+                            <span class="material-icons-outlined" style="font-size: 14px; vertical-align: middle;">info</span>
+                            Please select an image above to apply to the canvas
+                        </div>
+                    </div>
+                    </div>
+            </div>
+        </div>
+    </div>
+
+    <md-elevation id="selection-count" class="selection-count">
+        <span class="material-icons" style="margin-right: 8px;">photo_library</span>
+        <span>0 images selected</span>
+    </md-elevation>
+
+    <script src="app.js"></script>
+</body>
+</html> 
