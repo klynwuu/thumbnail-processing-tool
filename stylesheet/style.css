@@ -831,3 +831,41 @@ md-select md-menu {
     cursor: pointer;
     background-color: #000000;
 }
+
+/* Local Font Declarations */
+@font-face {
+    font-family: 'Kelsi';
+    src: url('../fonts/Kelsi-Regular.otf') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Monise Demo';
+    src: url('../fonts/Monsie-Demo-Regular.otf') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Monise Demo Outline';
+    src: url('../fonts/Monsie-Demo-Outline.otf') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Shadow Hand';
+    src: url('../fonts/ShadowHand.otf') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Mantou Sans';
+    src: url('../fonts/MantouSans-Regular.otf') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+

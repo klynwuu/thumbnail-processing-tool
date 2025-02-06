@@ -585,3 +585,7 @@ MigrationBackup/
 .cursorrules
 .cursor
 .cursor/*
+
+# February 6, 2025
+fonts/
+fonts/*
