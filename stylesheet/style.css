@@ -161,20 +161,32 @@ h1 {
     transition: box-shadow 0.2s ease;
     position: relative;
     cursor: pointer;
+    width: 30%;
+    display: flex;
+    align-items: stretch;
 }
 
 .preview-item img {
-    width: 100%;
-    height: auto;
-    max-height: 50vh; /* Maximum 50% of viewport height */
+    width: 200px;
+    height: 200px;
     object-fit: contain;
     background-color: #f8f9fa;
     display: block;
+    flex-shrink: 0;
 }
 
 .preview-info {
     padding: 16px;
     background-color: white;
+    font-size: 0.8rem;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.preview-info table {
+    font-size: 0.6rem;
 }
 
 .preview-item .action-buttons {
@@ -386,9 +398,9 @@ md-filled-tonal-button[active] {
 
 /* Preview area styles */
 .preview-area {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
     padding: 20px;
 }
 
@@ -866,6 +878,126 @@ md-select md-menu {
     src: url('../fonts/MantouSans-Regular.otf') format('opentype');
     font-weight: normal;
     font-style: normal;
+}
+
+@font-face {
+    font-family: 'HKFengHei';
+    src: url('../fonts/港风繁体.TTF') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'HKChangCheng';
+    src: url('../fonts/华文长宋繁.TTF') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'UnboundedSans';
+    src: url('../fonts/UnboundedSans-2.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+/* Paralucent Font Family */
+@font-face {
+    font-family: 'Paralucent';
+    src: url('../fonts/ParalucentCond-Bold.ttf') format('truetype');
+    font-weight: 700;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Paralucent';
+    src: url('../fonts/ParalucentCond-BoldItalic.ttf') format('truetype');
+    font-weight: 700;
+    font-style: italic;
+}
+
+@font-face {
+    font-family: 'Paralucent';
+    src: url('../fonts/ParalucentCond-DemiBold.ttf') format('truetype');
+    font-weight: 600;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Paralucent';
+    src: url('../fonts/ParalucentCond-DemiBoldIt.ttf') format('truetype');
+    font-weight: 600;
+    font-style: italic;
+}
+
+@font-face {
+    font-family: 'Paralucent';
+    src: url('../fonts/ParalucentCond-ExtraLight.ttf') format('truetype');
+    font-weight: 200;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Paralucent';
+    src: url('../fonts/ParalucentCond-ExtraLightIt.ttf') format('truetype');
+    font-weight: 200;
+    font-style: italic;
+}
+
+@font-face {
+    font-family: 'Paralucent';
+    src: url('../fonts/ParalucentCond-Heavy.ttf') format('truetype');
+    font-weight: 800;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Paralucent';
+    src: url('../fonts/ParalucentCond-HeavyItalic.ttf') format('truetype');
+    font-weight: 800;
+    font-style: italic;
+}
+
+@font-face {
+    font-family: 'Paralucent';
+    src: url('../fonts/ParalucentCond-Light.ttf') format('truetype');
+    font-weight: 300;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Paralucent';
+    src: url('../fonts/ParalucentCond-LightItalic.ttf') format('truetype');
+    font-weight: 300;
+    font-style: italic;
+}
+
+@font-face {
+    font-family: 'Paralucent';
+    src: url('../fonts/ParalucentCond-Medium.ttf') format('truetype');
+    font-weight: 500;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Paralucent';
+    src: url('../fonts/ParalucentCond-MediumItalic.ttf') format('truetype');
+    font-weight: 500;
+    font-style: italic;
+}
+
+@font-face {
+    font-family: 'Paralucent';
+    src: url('../fonts/ParalucentCond-Thin.ttf') format('truetype');
+    font-weight: 100;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Paralucent';
+    src: url('../fonts/ParalucentCond-ThinItalic.ttf') format('truetype');
+    font-weight: 100;
+    font-style: italic;
 }
 
 
