@@ -171,8 +171,12 @@ document.addEventListener('DOMContentLoaded', () => {
                                 const tags = findEXIFinHEIC(reader.result);
                                 console.log('HEIC EXIF tags:', tags);
                                 
-                                if (tags['GPSLatitude'] && tags['GPSLatitudeRef'] && 
-                                    tags['GPSLongitude'] && tags['GPSLongitudeRef']) {
+                                // Only process GPS data if all required tags exist
+                                if (tags && 
+                                    tags['GPSLatitude'] && 
+                                    tags['GPSLatitudeRef'] && 
+                                    tags['GPSLongitude'] && 
+                                    tags['GPSLongitudeRef']) {
                                     
                                     // Convert GPS coordinates to decimal format
                                     const lat = convertGPSToDecimal(tags['GPSLatitude'], tags['GPSLatitudeRef']);
@@ -192,39 +196,53 @@ document.addEventListener('DOMContentLoaded', () => {
                                     console.log('Extracted GPS data:', originalExif);
                                 } else {
                                     console.log('No GPS data found in HEIC file');
+                                    originalExif = {};
+                                    if (tags && tags['DateTimeOriginal']) {
+                                        originalExif.datetime = tags['DateTimeOriginal'];
+                                    }
                                 }
                                 resolve();
                             } catch (error) {
-                                console.error('Error extracting HEIC metadata:', error);
-                                resolve();
+                                console.log('Error parsing HEIC metadata:', error);
+                                originalExif = {}; // Set empty object on error
+                                resolve(); // Continue processing even if metadata extraction fails
                             }
                         };
-                        reader.onerror = reject;
+                        reader.onerror = () => {
+                            console.log('Error reading HEIC file');
+                            originalExif = {}; // Set empty object on error
+                            resolve(); // Continue processing even if file reading fails
+                        };
                         reader.readAsArrayBuffer(file);
                     });
 
-                    const blob = await heic2any({
-                        blob: file,
-                        toType: 'image/jpeg',
-                        quality: 1
-                    });
-                    processedBlob = Array.isArray(blob) ? blob[0] : blob;
-                    
-                    // Store original EXIF data for later use
-                    if (originalExif) {
-                        processedBlob.exifData = originalExif;
+                    // Continue with HEIC conversion
+                    try {
+                        const blob = await heic2any({
+                            blob: file,
+                            toType: 'image/jpeg',
+                            quality: 1
+                        });
+                        processedBlob = Array.isArray(blob) ? blob[0] : blob;
+                        
+                        // Store original EXIF data for later use
+                        if (originalExif && Object.keys(originalExif).length > 0) {
+                            processedBlob.exifData = originalExif;
+                        }
+                        
+                        processedFile = new File([processedBlob], file.name.replace(/\.heic$/i, '.jpg'), {
+                            type: 'image/jpeg',
+                            lastModified: file.lastModified
+                        });
+                        
+                        console.log('HEIC conversion complete. New file size:', formatFileSize(processedBlob.size));
+                    } catch (error) {
+                        console.error('Error converting HEIC:', error);
+                        throw new Error('Error converting HEIC image. This format might not be supported by your browser.');
                     }
-                    
-                    processedFile = new File([processedBlob], file.name.replace(/\.heic$/i, '.jpg'), {
-                        type: 'image/jpeg',
-                        lastModified: file.lastModified
-                    });
-                    
-                    console.log('HEIC conversion complete. New file size:', formatFileSize(processedBlob.size));
                 } catch (error) {
                     console.error('Error processing HEIC:', error);
-                    alert('Error processing HEIC image. This format might not be supported by your browser.');
-                    return;
+                    throw new Error('Error processing HEIC image. This format might not be supported by your browser.');
                 }
             }
 
@@ -1106,9 +1124,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const baseSize = Math.max(selectedImageElement.naturalWidth, selectedImageElement.naturalHeight);
         const scale = imageSize / 100;
         
-        // Set high-resolution canvas size
+        // Set high-resolution canvas size (4x the preview size for better quality)
         exportCanvas.width = baseSize * (width / Math.max(width, height));
         exportCanvas.height = baseSize * (height / Math.max(width, height));
+
+        // Enable text smoothing
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
 
         // Fill canvas with selected color
         ctx.fillStyle = canvasColor;
@@ -1118,7 +1140,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (imageEffects.dropShadow) {
             ctx.save();
             ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
-            ctx.shadowBlur = exportCanvas.width * 0.02; // Scale shadow blur with canvas size
+            ctx.shadowBlur = exportCanvas.width * 0.02;
             ctx.shadowOffsetX = exportCanvas.width * 0.01;
             ctx.shadowOffsetY = exportCanvas.width * 0.01;
         }
@@ -1154,21 +1176,24 @@ document.addEventListener('DOMContentLoaded', () => {
             ctx.textAlign = 'left';
             
             // Calculate text position
-            const padding = exportCanvas.width * 0.05; // 5% padding from the left edge
+            const padding = exportCanvas.width * 0.05;
             const xPos = (exportCanvas.width * (textOverlay.xPosition / 100)) - (exportCanvas.width * 0.4);
             const yPos = exportCanvas.height * (textOverlay.yPosition / 100);
             let currentY = yPos;
             
             // Scale font sizes based on canvas size ratio
             const fontSizeRatio = exportCanvas.width / previewCanvas.width;
+            const titleFontSize = textOverlay.fontSize * fontSizeRatio;
+            const subtitleFontSize = (textOverlay.fontSize * 0.7) * fontSizeRatio;
             
             // Draw title
             if (textOverlay.title) {
                 const titleLines = textOverlay.title.split('\n');
-                const titleFontSize = textOverlay.fontSize * fontSizeRatio;
+
+                // Set up title font with all properties
                 ctx.font = `${textOverlay.titleFontStyle} ${textOverlay.titleFontWeight} ${titleFontSize}px "${textOverlay.titleFontFamily}"`;
                 
-                // Apply text shadow if enabled
+                // Apply text effects
                 if (textOverlay.dropShadow) {
                     ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
                     ctx.shadowBlur = 4 * fontSizeRatio;
@@ -1176,26 +1201,45 @@ document.addEventListener('DOMContentLoaded', () => {
                     ctx.shadowOffsetY = 2 * fontSizeRatio;
                 }
 
+                // Set text color with opacity
                 ctx.fillStyle = hexToRGBA(textOverlay.color, textOverlay.opacity / 100);
                 
+                // Draw text outline if enabled
+                if (textOverlay.outlineWidth > 0) {
+                    ctx.strokeStyle = textOverlay.outlineColor;
+                    ctx.lineWidth = textOverlay.outlineWidth * fontSizeRatio;
+                    ctx.lineJoin = 'round';
+                    titleLines.forEach(line => {
+                        if (line.trim()) {
+                            ctx.strokeText(line, xPos + padding, currentY);
+                        }
+                        currentY += titleFontSize * (textOverlay.lineHeight / 100);
+                    });
+                    currentY = yPos; // Reset for fill
+                }
+
                 // Draw each line of the title
                 titleLines.forEach(line => {
-                    if (line.trim()) {  // Only draw non-empty lines
+                    if (line.trim()) {
                         ctx.fillText(line, xPos + padding, currentY);
                         currentY += titleFontSize * (textOverlay.lineHeight / 100);
                     }
                 });
-                
-                ctx.shadowColor = 'transparent';
             }
             
             // Draw subtitle
             if (textOverlay.subtitle) {
                 const subtitleLines = textOverlay.subtitle.split('\n');
-                const subtitleSize = (textOverlay.fontSize * 0.7) * fontSizeRatio;
-                ctx.font = `${textOverlay.subtitleFontStyle} ${textOverlay.subtitleFontWeight} ${subtitleSize}px "${textOverlay.subtitleFontFamily}"`;
                 
-                // Apply text shadow if enabled
+                // Calculate subtitle starting Y position
+                currentY = textOverlay.title ? 
+                    yPos + titleFontSize * (textOverlay.lineHeight / 100) : 
+                    yPos;
+                
+                // Set up subtitle font with all properties
+                ctx.font = `${textOverlay.subtitleFontStyle} ${textOverlay.subtitleFontWeight} ${subtitleFontSize}px "${textOverlay.subtitleFontFamily}"`;
+                
+                // Apply text effects
                 if (textOverlay.dropShadow) {
                     ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
                     ctx.shadowBlur = 4 * fontSizeRatio;
@@ -1203,17 +1247,33 @@ document.addEventListener('DOMContentLoaded', () => {
                     ctx.shadowOffsetY = 2 * fontSizeRatio;
                 }
 
+                // Set text color with opacity
                 ctx.fillStyle = hexToRGBA(textOverlay.color, textOverlay.opacity / 100);
                 
+                // Draw text outline if enabled
+                if (textOverlay.outlineWidth > 0) {
+                    ctx.strokeStyle = textOverlay.outlineColor;
+                    ctx.lineWidth = textOverlay.outlineWidth * fontSizeRatio;
+                    ctx.lineJoin = 'round';
+                    subtitleLines.forEach(line => {
+                        if (line.trim()) {
+                            ctx.strokeText(line, xPos + padding, currentY);
+                        }
+                        currentY += subtitleFontSize * (textOverlay.lineHeight / 100);
+                    });
+                    // Reset Y position for fill
+                    currentY = textOverlay.title ? 
+                        yPos + titleFontSize * (textOverlay.lineHeight / 100) : 
+                        yPos;
+                }
+
                 // Draw each line of the subtitle
                 subtitleLines.forEach(line => {
-                    if (line.trim()) {  // Only draw non-empty lines
+                    if (line.trim()) {
                         ctx.fillText(line, xPos + padding, currentY);
-                        currentY += subtitleSize * (textOverlay.lineHeight / 100);
+                        currentY += subtitleFontSize * (textOverlay.lineHeight / 100);
                     }
                 });
-                
-                ctx.shadowColor = 'transparent';
             }
             
             ctx.restore();
@@ -1230,7 +1290,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const filename = `${datetime}_${currentOrientation}_${currentAspectRatio.replace(':', '-')}_${cleanTitle}_${cleanSubtitle}__${originalFilename}.png`;
 
-        // Create download link
+        // Create download link with maximum quality
         const link = document.createElement('a');
         link.download = filename;
         link.href = exportCanvas.toDataURL('image/png', 1.0);
@@ -1607,100 +1667,36 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    function initializeEventListeners() {
-        // Text input event listeners
-        const titleInput = document.getElementById('title-input');
-        const subtitleInput = document.getElementById('subtitle-input');
-        const titleFontFamilySelect = document.getElementById('title-font-family-select');
-        const subtitleFontFamilySelect = document.getElementById('subtitle-font-family-select');
+    function initializeTextControls() {
+        // Initialize font weight defaults
         const titleFontWeightSelect = document.getElementById('title-font-weight-select');
         const subtitleFontWeightSelect = document.getElementById('subtitle-font-weight-select');
         const titleFontStyleSelect = document.getElementById('title-font-style-select');
         const subtitleFontStyleSelect = document.getElementById('subtitle-font-style-select');
-        const fontSizeSlider = document.getElementById('font-size-slider');
-        const lineHeightSlider = document.getElementById('line-height-slider');
-        const textXPositionSlider = document.getElementById('text-x-position-slider');
-        const textYPositionSlider = document.getElementById('text-y-position-slider');
-        const textOpacitySlider = document.getElementById('text-opacity-slider');
-        const textShadowEffect = document.getElementById('text-shadow-effect');
-        const textMarkerEffect = document.getElementById('text-marker-effect');
-        const textColorInput = document.getElementById('text-color-input');
-        const textEyedropperBtn = document.getElementById('text-eyedropper-btn');
 
-        // Add event listeners only if elements exist
-        if (titleInput) titleInput.addEventListener('input', updateTextOverlay);
-        if (subtitleInput) subtitleInput.addEventListener('input', updateTextOverlay);
-        if (titleFontFamilySelect) titleFontFamilySelect.addEventListener('change', updateTextOverlay);
-        if (subtitleFontFamilySelect) subtitleFontFamilySelect.addEventListener('change', updateTextOverlay);
-        if (titleFontWeightSelect) titleFontWeightSelect.addEventListener('change', updateTextOverlay);
-        if (subtitleFontWeightSelect) subtitleFontWeightSelect.addEventListener('change', updateTextOverlay);
-        if (titleFontStyleSelect) titleFontStyleSelect.addEventListener('change', updateTextOverlay);
-        if (subtitleFontStyleSelect) subtitleFontStyleSelect.addEventListener('change', updateTextOverlay);
-        if (fontSizeSlider) fontSizeSlider.addEventListener('input', updateTextOverlay);
-        if (lineHeightSlider) lineHeightSlider.addEventListener('input', updateTextOverlay);
-        if (textXPositionSlider) textXPositionSlider.addEventListener('input', updateTextOverlay);
-        if (textYPositionSlider) textYPositionSlider.addEventListener('input', updateTextOverlay);
-        if (textOpacitySlider) textOpacitySlider.addEventListener('input', updateTextOverlay);
-        if (textShadowEffect) textShadowEffect.addEventListener('click', updateTextOverlay);
-
-        // Handle text color input
-        if (textColorInput) {
-            textColorInput.addEventListener('input', (e) => {
-                const color = e.target.value;
-                if (/^#[0-9A-F]{6}$/i.test(color)) {
-                    textOverlay.color = color;
-                    if (textColorPreview) textColorPreview.style.backgroundColor = color;
-                    updateTextOverlay();
-                }
-            });
+        // Set default values
+        if (titleFontWeightSelect) {
+            titleFontWeightSelect.value = "400"; // Regular
+            textOverlay.titleFontWeight = "400";
+        }
+        
+        if (subtitleFontWeightSelect) {
+            subtitleFontWeightSelect.value = "400"; // Regular
+            textOverlay.subtitleFontWeight = "400";
+        }
+        
+        if (titleFontStyleSelect) {
+            titleFontStyleSelect.value = "normal";
+            textOverlay.titleFontStyle = "normal";
+        }
+        
+        if (subtitleFontStyleSelect) {
+            subtitleFontStyleSelect.value = "normal";
+            textOverlay.subtitleFontStyle = "normal";
         }
 
-        // Handle text eyedropper
-        if (textEyedropperBtn) {
-            textEyedropperBtn.addEventListener('click', async () => {
-                if (!window.EyeDropper) {
-                    alert('Your browser does not support the EyeDropper API');
-                    return;
-                }
-
-                try {
-                    const eyeDropper = new EyeDropper();
-                    const result = await eyeDropper.open();
-                    textOverlay.color = result.sRGBHex;
-                    if (textColorInput) textColorInput.value = textOverlay.color;
-                    if (textColorPreview) textColorPreview.style.backgroundColor = textOverlay.color;
-                    updateTextOverlay();
-                } catch (e) {
-                    console.error('EyeDropper failed:', e);
-                }
-            });
-        }
-
-        // Initialize snap positions
-        document.querySelectorAll('.snap-position-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const position = btn.dataset.position;
-                switch (position) {
-                    case 'top':
-                        textOverlay.yPosition = 10;
-                        break;
-                    case 'upper-third':
-                        textOverlay.yPosition = 33;
-                        break;
-                    case 'center':
-                        textOverlay.yPosition = 50;
-                        break;
-                    case 'lower-third':
-                        textOverlay.yPosition = 66;
-                        break;
-                    case 'bottom':
-                        textOverlay.yPosition = 90;
-                        break;
-                }
-                if (textYPositionSlider) textYPositionSlider.value = textOverlay.yPosition;
-                updateTextOverlay();
-            });
-        });
+        // Update the preview to reflect default values
+        updateTextOverlay();
     }
 
     // Call the initialization function after DOM content is loaded
@@ -1709,5 +1705,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Initialize event listeners
         initializeEventListeners();
+
+        // Initialize text controls
+        initializeTextControls();
     });
 }); 

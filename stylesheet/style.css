@@ -882,14 +882,14 @@ md-select md-menu {
 
 @font-face {
     font-family: 'HKFengHei';
-    src: url('../fonts/港风繁体.TTF') format('truetype');
+    src: url('../fonts/gangfeng.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
 }
 
 @font-face {
     font-family: 'HKChangCheng';
-    src: url('../fonts/华文长宋繁.TTF') format('truetype');
+    src: url('../fonts/changsong.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
 }
@@ -998,6 +998,42 @@ md-select md-menu {
     src: url('../fonts/ParalucentCond-ThinItalic.ttf') format('truetype');
     font-weight: 100;
     font-style: italic;
+}
+
+/* Kanji Font Declarations */
+@font-face {
+    font-family: 'ChaoFanTi';
+    src: url('../fonts/kanji-ChaoFanTi-2.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'ShangZhenTi';
+    src: url('../fonts/kanji-ShangZhenTi-2.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'MFJinHei';
+    src: url('../fonts/kanji-MFJinHei_Noncommercial-Regular.otf') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'SourceHanMono';
+    src: url('../fonts/kanji-SourceHanMono.ttc') format('truetype-collections');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Slidefu';
+    src: url('../fonts/kanji-Slidefu-Regular-2.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
 }
 
 
