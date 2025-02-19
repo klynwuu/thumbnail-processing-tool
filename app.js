@@ -1316,8 +1316,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let textOverlay = {
         title: '',
         subtitle: '',
-        titleFontFamily: 'Cabin Condensed',
-        subtitleFontFamily: 'Cabin Condensed',
+        titleFontFamily: 'Instrument Serif',
+        subtitleFontFamily: 'Inter',
         titleFontWeight: '400',
         subtitleFontWeight: '400',
         titleFontStyle: 'normal',
@@ -1432,8 +1432,8 @@ document.addEventListener('DOMContentLoaded', () => {
         textOverlay = {
             title: titleInput?.value || '',
             subtitle: subtitleInput?.value || '',
-            titleFontFamily: titleFontFamilySelect?.value || 'Cabin Condensed',
-            subtitleFontFamily: subtitleFontFamilySelect?.value || 'Cabin Condensed',
+            titleFontFamily: titleFontFamilySelect?.value || 'Instrument Serif',
+            subtitleFontFamily: subtitleFontFamilySelect?.value || 'Inter',
             titleFontWeight: titleFontWeightSelect?.value || '400',
             subtitleFontWeight: subtitleFontWeightSelect?.value || '400',
             titleFontStyle: titleFontStyleSelect?.value || 'normal',

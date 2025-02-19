@@ -1036,4 +1036,80 @@ md-select md-menu {
     font-style: normal;
 }
 
+/* Instrument Serif Font Declarations */
+@font-face {
+    font-family: 'Instrument Serif';
+    src: url('../fonts/Instrument_Serif/InstrumentSerif-Regular.otf') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Instrument Serif';
+    src: url('../fonts/Instrument_Serif/InstrumentSerif-Italic.otf') format('opentype');
+    font-weight: normal;
+    font-style: italic;
+}
+
+@font-face {
+    font-family: 'Instrument Serif';
+    src: url('../fonts/Instrument_Serif/InstrumentSerif-Bold.otf') format('opentype');
+    font-weight: bold;
+    font-style: normal;
+}
+
+/* Inter Font Declarations */
+@font-face {
+    font-family: 'Inter';
+    src: url('../fonts/Inter/Inter-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Inter';
+    src: url('../fonts/Inter/Inter-Italic.ttf') format('truetype');
+    font-weight: normal;
+    font-style: italic;
+}
+
+@font-face {
+    font-family: 'Inter';
+    src: url('../fonts/Inter/Inter-Bold.ttf') format('truetype');
+    font-weight: bold;
+    font-style: normal;
+}
+
+/* Noto Sans TC Font Declaration */
+@font-face {
+    font-family: 'Noto Sans TC';
+    src: url('../fonts/Noto_Sans/NotoSansTC-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+/* Noto Sans SC Font Declaration */
+@font-face {
+    font-family: 'Noto Sans SC';
+    src: url('../fonts/Noto_Sans/NotoSansSC-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+/* Space Grotesk Font Declaration */
+@font-face {
+    font-family: 'Space Grotesk';
+    src: url('../fonts/Space_Grotesk/SpaceGrotesk-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+/* Space Mono Font Declaration */
+@font-face {
+    font-family: 'Space Mono';
+    src: url('../fonts/Space_Mono/SpaceMono-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
 
